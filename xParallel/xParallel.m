@@ -102,8 +102,8 @@ You should have received a copy of the GNU General Public License
 *)
 
 
-(* ::Subsection::Closed:: *)
-(*1.3. Begin Package*)
+(* ::Subsection:: *)
+(*1.3 Begin Package*)
 
 
 (* ::Text:: *)
@@ -134,7 +134,7 @@ If[Unevaluated[xAct`xCore`Private`$LastPackage]===xAct`xCore`Private`$LastPackag
 
 
 (* ::Input::Initialization:: *)
-BeginPackage["xAct`xParallel`",{"xAct`xTensor`","xAct`xPerm`","xAct`xCore`","xAct`xCoba`","xAct`ExpressionManipulation`"}]
+BeginPackage["xAct`xParallel`",{"xAct`xTensor`","xAct`xPerm`","xAct`xCore`","xAct`xPert`","xAct`xCoba`","xAct`ExpressionManipulation`"}]
 
 
 (* ::Text:: *)
@@ -189,12 +189,16 @@ Print[xAct`xCore`Private`bars]];
 (*$Context*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*1.4 Usage messages*)
 
 
 (* ::Text:: *)
 (*Usage messages for xParallel functions*)
+
+
+(* ::Text:: *)
+(*Initial definitions*)
 
 
 (* ::Input::Initialization:: *)
@@ -205,14 +209,22 @@ ParallelConfigure::usage=
 ParallelClean::usage =
 "ParallelClean[] will clear all kernels allocated by xParallel.";
 
+
+(* ::Text:: *)
+(*xTensor*)
+
+
+(* ::Input::Initialization:: *)
 ParallelDefManifold::usage =
-"ParallelDefManifold works like DefManifold, but allocating the Manifold on all kernels.";
+"ParallelDefManifold works like DefManifold, but allocating the definitions on all kernels.";
 ParallelDefMetric::usage =
-"ParallelDefMetric works like DefMetric, but allocating the Manifold on all kernels.";
+"ParallelDefMetric works like DefMetric, but allocating the definitions on all kernels.";
 ParallelDefTensor::usage =
-"ParallelDefTensor works like DefTensor, but allocating the Manifold on all kernels.";
+"ParallelDefTensor works like DefTensor, but allocating the definitions on all kernels.";
 ParallelDefScalarFunction::usage =
-"ParallelDefScalarFunction works like DefScalarFunction, but allocating the Manifold on all kernels.";
+"ParallelDefScalarFunction works like DefScalarFunction, but allocating the definitions on all kernels.";
+ParallelDefConstantSymbol::usage =
+"ParallelDefDefConstantSymbol works like DefConstantSymbol, but allocating the definitions on all kernels.";
 
 ParallelContractMetric::usage =
 "ParallelContractMetric works like ContractMetric, but performing the computation on all available kernels.";
@@ -223,10 +235,17 @@ ParallelSimplification::usage =
 ParallelToCanonical::usage =
 "ParallelToCanonical splits the equation in a number of parts given by the allocated kernels. It then performs the ToCanonical on each of these parts.";
 
+
+(* ::Text:: *)
+(*xPert*)
+
+
+(* ::Input::Initialization:: *)
 ParallelDefMetricPerturbation::usage =
-"ParallelDefMetricPerturbation works like DefMetricPerturbation, but allocating the Manifold on all kernels.";
+"ParallelDefMetricPerturbation works like DefMetricPerturbation, but allocating the definitions on all kernels.";
 ParallelDefTensorPerturbation::usage =
-"ParallelDefTensorPerturbation works like DefTensorPerturbation, but allocating the Manifold on all kernels.";
+"ParallelDefTensorPerturbation works like DefTensorPerturbation, but allocating the definitions on all kernels.";
+
 ParallelPerturbation::usage =
 "ParallelPerturbation works like Perturbation, but performing the computation on all available kernels.";
 ParallelExpandPerturbation::usage =
@@ -236,10 +255,33 @@ ParallelVarD::usage =
 
 
 (* ::Text:: *)
-(**)
+(*xCoba*)
 
 
-(* ::Subsection:: *)
+(* ::Input::Initialization:: *)
+ParallelDefChart::usage =
+"ParallelDefChart works like DefChart, but allocating the definitions on all kernels.";
+ParallelMetricInBasis::usage =
+"ParallelMetricInBasis works like MetricInBasis, but allocating the definitions on all kernels.";
+ParallelMetricCompute::usage =
+"ParallelDefMetricCompute works like DefMetricCompute, but allocating the definitions on all kernels.";
+ParallelComponentValue::usage =
+"ParallelComponentValue works like ComponentValue, but allocating the definitions on all kernels.";
+
+ParallelToBasis::usage=
+"ParallelToBasis works like ToBasis, but performing the computation on all available kernels.";
+ParallelComponentArray::usage=
+"ParallelComponentArray works like ComponentArray, but performing the computation on all available kernels.";
+ParallelTraceBasisDummy::usage=
+"ParallelTraceBasisDummy works like BasisDummy, but performing the computation on all available kernels.";
+ParallelToValues::usage=
+"ParallelToValues works like ToValues, but performing the computation on all available kernels.";
+
+ParallelInCoordinates::usage=
+"ParallelInCoordinates[ch][equation] evaluates the input equation term by term with ToBasis[ch], ToValues, TraceBasisDummy and ToValues again, in parallel.";
+
+
+(* ::Subsection::Closed:: *)
 (*1.5 Begin Private*)
 
 
@@ -255,7 +297,7 @@ Begin["`Private`"]
 (*$ContextPath*)
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*1.5 Initial definitions*)
 
 
@@ -320,6 +362,12 @@ DefScalarFunction[f,FilterRules[{options},Options[DefScalarFunction]]];
 If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];ParallelEvaluate[DefScalarFunction[f,FilterRules[{options},Options[DefScalarFunction]]],Kernels[]];
 If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];)
 
+ParallelDefConstantSymbol[symbol_,options:OptionsPattern[]]:=(
+If[$ParallelDefInfoQ ==True,Print["** DefScalarFunction: Parallelization definition"]];
+DefConstantSymbol[symbol,FilterRules[{options},Options[DefConstantSymbol]]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];ParallelEvaluate[DefConstantSymbol[symbol,FilterRules[{options},Options[DefConstantSymbol]]],Kernels[]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];)
+
 
 (* ::Subsection:: *)
 (*2.2 xPert*)
@@ -341,6 +389,40 @@ ParallelEvaluate[DefTensorPerturbation[pert,tensor,args,FilterRules[{options},Op
 If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];)
 
 
+(* ::Subsection:: *)
+(*2.3 xCoba*)
+
+
+(* ::Input::Initialization:: *)
+ParallelDefChart[basis_,args_,indices_,coords_,options:OptionsPattern[]]:=(
+If[$ParallelDefInfoQ ==True,Print["** ParallelDefChart: Parallelization definition"]];
+DefChart[basis,args,indices,coords,FilterRules[{options},Options[DefChart]]];
+(*If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];
+ParallelEvaluate[DefChart[basis,args,indices,coords,FilterRules[{options},Options[DefChart]]],Kernels[]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];*))
+
+ParallelMetricInBasis[metric_,basis_,matrix_,options:OptionsPattern[]]:=(
+If[$ParallelDefInfoQ ==True,Print["** ParallelDefMetricInBasis: Parallelization definition"]];
+MetricInBasis[metric,basis,matrix,FilterRules[{options},Options[MetricInBasis]]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];
+ParallelEvaluate[MetricInBasis[metric,basis,matrix,FilterRules[{options},Options[MetricInBasis]]],Kernels[]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];)
+
+ParallelMetricCompute[g_,ch_,T_,options:OptionsPattern[]]:=(
+If[$ParallelDefInfoQ ==True,Print["** ParallelMetricCompute: Parallelization definition"]];
+MetricCompute[g,ch,T,FilterRules[{options},Options[MetricCompute]]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];
+ParallelEvaluate[MetricCompute[g,ch,T,FilterRules[{options},Options[MetricCompute]]],Kernels[]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];)
+
+ParallelComponentValue[expr_,value_,options:OptionsPattern[]]:=(
+If[$ParallelDefInfoQ ==True,Print["** ParallelComponentValue: Parallelization definition"]];
+ComponentValue[expr,value];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=False,Kernels[]]];
+ParallelEvaluate[ComponentValue[expr,value],Kernels[]];
+If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];)
+
+
 (* ::Chapter:: *)
 (*3. Parallel functions*)
 
@@ -350,9 +432,9 @@ If[$ParallelDefInfoQ ==False,ParallelEvaluate[$DefInfoQ=True,Kernels[]]];)
 
 
 (* ::Input::Initialization:: *)
-ParallelContractMetric[equation_] := Module[{},Return[Plus@@ParallelMap[ContractMetric[#]&,List@@(equation//Expand)]]]
+ParallelContractMetric[equation_] := Module[{},Return[Plus@@ParallelMap[ContractMetric[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
 
-ParallelSortCovDs[equation_] := Module[{},Return[Plus@@ParallelMap[SortCovDs[#]&,List@@(equation//Expand)]]]
+ParallelSortCovDs[equation_] := Module[{},Return[Plus@@ParallelMap[SortCovDs[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
 
 ParallelSimplification[equation_]:=Module[{},Plus@@ParallelMap[Simplification[Plus@@#]&,Partition[Quiet[AppendTo[List@@(equation//Expand),0]],Length[Kernels[]]]]]
 
@@ -364,11 +446,33 @@ ParallelToCanonical[equation_]:=Module[{},Plus@@ParallelMap[ToCanonical[Plus@@#]
 
 
 (* ::Input::Initialization:: *)
-ParallelPerturbation[InputExp_] := Module[{},Return[Plus@@ParallelMap[Perturbation[#]&,List@@(InputExp//Expand)]]]
+ParallelPerturbation[equation_] := Module[{},Return[Plus@@ParallelMap[Perturbation[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
 
-ParallelExpandPerturbation[InputExp_] := Module[{},Return[Plus@@ParallelMap[ExpandPerturbation[#]&,List@@(InputExp//Expand)]]]
+ParallelExpandPerturbation[equation_] := Module[{},Return[Plus@@ParallelMap[ExpandPerturbation[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
 
-ParallelVarD[T_,covd_][InputExp_] := Module[{},Return[Plus@@ParallelMap[VarD[T,covd][#]&,List@@(InputExp//Expand)]]]
+ParallelVarD[T_,covd_][equation_] := Module[{},Return[Plus@@ParallelMap[VarD[T,covd][#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
+
+
+(* ::Subsection:: *)
+(*3.3 xCoba*)
+
+
+(* ::Input::Initialization:: *)
+ParallelToBasis[ch_][equation_] := Module[{},Return[Plus@@ParallelMap[ToBasis[ch][#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
+
+ParallelComponentArray[equation_] := Module[{},Return[Plus@@ParallelMap[ComponentArray[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
+
+ParallelTraceBasisDummy[equation_] := Module[{},Return[Plus@@ParallelMap[TraceBasisDummy[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
+
+ParallelToValues[equation_] := Module[{},Return[Plus@@ParallelMap[ToValues[#]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
+
+
+(* ::Text:: *)
+(*Custom function: //ToBasis[ch]//ToValues//TraceBasisDummy//ToValues in parallel*)
+
+
+(* ::Input::Initialization:: *)
+ParallelInCoordinates[ch_][equation_]:=Module[{},Return[Plus@@ParallelMap[ToValues[TraceBasisDummy[ToValues[ToBasis[ch][#]]]]&,Flatten[{(equation//Expand)/.Plus->List}]]]]
 
 
 (* ::Chapter:: *)
@@ -397,80 +501,3 @@ EndPackage[]
 
 (* ::Input:: *)
 (*$Context*)
-
-
-(* ::Chapter:: *)
-(*4. Examples*)
-
-
-(* ::Subsection:: *)
-(*4.1 Horndeski Subscript[G, 5] term*)
-
-
-(* ::Input:: *)
-(*ParallelConfigure[]*)
-
-
-(* ::Input:: *)
-(*ParallelDefManifold[M,4,{\[Alpha],\[Beta],\[Gamma],\[Delta],\[Eta],\[Lambda],\[Mu],\[Nu],\[Rho],\[Tau],\[Chi],\[Omega],\[Xi],\[Zeta]}];*)
-
-
-(* ::Input:: *)
-(*ParallelDefMetric[1,metric[-\[Mu],-\[Nu]],CD,PrintAs->"g"];*)
-
-
-(* ::Input:: *)
-(*ParallelDefMetricPerturbation[metric,metpert,\[Epsilon],PrintAs->"h"];*)
-
-
-(* ::Input:: *)
-(*ParallelDefScalarFunction[G5,PrintAs->"\!\(\*SubscriptBox[\(G\), \(5\)]\)"]*)
-
-
-(* ::Input:: *)
-(*ParallelDefTensor[B[\[Mu]],M,PrintAs->"b"]*)
-
-
-(* ::Input:: *)
-(*ParallelDefTensor[l[],M]*)
-
-
-(* ::Input:: *)
-(*ParallelDefTensor[Phi[],M,PrintAs->"\[CurlyPhi]"]*)
-
-
-(* ::Input:: *)
-(*ParallelDefTensorPerturbation[PertPhi[LI[order]],Phi[],M,PrintAs->"\[Delta]\[CurlyPhi]"]*)
-
-
-(* ::Input:: *)
-(*L5=Sqrt[-Detmetric[]]*(G5[Phi[],-CD[a]@Phi[]*CD[-a]@Phi[]/2]*EinsteinCD[-b,-c]*CD[b]@CD[c]@Phi[]-Derivative[0,1][G5][Phi[],-CD[a]@Phi[]*CD[-a]@Phi[]/2]/6*(CD[b]@CD[-b]@Phi[]*CD[c]@CD[-c]@Phi[]*CD[d]@CD[-d]@Phi[]-3*CD[d]@CD[-d]@Phi[]*CD[-b]@CD[-c]@Phi[]*CD[b]@CD[c]@Phi[]+2*CD[-b]@CD[-c]@Phi[]*CD[c]@CD[d]@Phi[]*CD[-d]@CD[b]@Phi[]))/.a->\[Alpha]/.b->\[Beta]/.c->\[Chi]/.d->\[Delta]//ToCanonical//SeparateMetric[metric]*)
-
-
-(* ::Input:: *)
-(*AbsoluteTiming[VarD[PertPhi[LI[1]],CD][Simplification@ContractMetric@ExpandPerturbation@Perturbation@L5];];*)
-(*AbsoluteTiming[ParallelVarD[PertPhi[LI[1]],CD][Simplification@ParallelSimplification@ParallelContractMetric@ParallelExpandPerturbation@ParallelPerturbation@L5];];*)
-(**)
-(*%%-%;*)
-(*Print[%[[1]]/%%%[[1]]*100, " % performance gain"]*)
-(**)
-(*AbsoluteTiming[VarD[metpert[LI[1],\[Alpha],\[Beta]],CD][Simplification@ContractMetric@ExpandPerturbation@Perturbation@L5];];*)
-(*AbsoluteTiming[ParallelVarD[metpert[LI[1],\[Alpha],\[Beta]],CD][Simplification@ParallelSimplification@ParallelContractMetric@ParallelExpandPerturbation@ParallelPerturbation@L5];];*)
-(**)
-(*%%-%;*)
-(*Print[%[[1]]/%%%[[1]]*100, " % performance gain"]*)
-
-
-(* ::Input:: *)
-(*AbsoluteTiming[VarD[PertPhi[LI[1]],CD][ContractMetric@ExpandPerturbation@Perturbation@L5];]*)
-(*AbsoluteTiming[ParallelVarD[PertPhi[LI[1]],CD][ParallelContractMetric@ParallelExpandPerturbation@ParallelPerturbation@L5];]*)
-(**)
-(*%%-%*)
-(**)
-(*AbsoluteTiming[VarD[metpert[LI[1],\[Alpha],\[Beta]],CD][ContractMetric@ExpandPerturbation@Perturbation@L5];]*)
-(*AbsoluteTiming[ParallelVarD[metpert[LI[1],\[Alpha],\[Beta]],CD][ParallelContractMetric@ParallelExpandPerturbation@ParallelPerturbation@L5];]*)
-(**)
-(*%%-%*)
-
-
-
